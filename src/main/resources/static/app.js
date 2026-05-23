@@ -131,6 +131,68 @@ function formatWon(value) {
   return `${sign}${abs}원`;
 }
 
+function formatMoneyPreview(value) {
+  if (value === "" || value === null || value === undefined) {
+    return "";
+  }
+
+  const numericValue = Number(value);
+
+  if (!Number.isFinite(numericValue)) {
+    return "";
+  }
+
+  if (numericValue === 0) {
+    return "0원";
+  }
+
+  const rounded = Math.round(numericValue);
+  const abs = Math.abs(rounded);
+  const sign = rounded < 0 ? "-" : "";
+  const uk = Math.floor(abs / 100000000);
+  const man = Math.floor((abs % 100000000) / 10000);
+  const won = abs % 10000;
+  const parts = [];
+
+  if (uk > 0) {
+    parts.push(`${uk.toLocaleString("ko-KR")}억`);
+  }
+
+  if (man > 0) {
+    parts.push(`${man.toLocaleString("ko-KR")}만`);
+  }
+
+  if (won > 0) {
+    parts.push(`${won.toLocaleString("ko-KR")}원`);
+  }
+
+  if (won === 0) {
+    return `${sign}${parts.join(" ")}원`;
+  }
+
+  return `${sign}${parts.join(" ")}`;
+}
+
+function updateMoneyPreview(preview, value) {
+  const text = formatMoneyPreview(value);
+
+  preview.textContent = text;
+  preview.classList.toggle("visible", text.length > 0);
+}
+
+function renderMoneyPreviews() {
+  document.querySelectorAll("[data-money-preview-for]").forEach((preview) => {
+    const input = document.getElementById(preview.dataset.moneyPreviewFor);
+    updateMoneyPreview(preview, input?.value);
+  });
+
+  document.querySelectorAll("[data-money-preview-field]").forEach((preview) => {
+    const row = preview.closest("label");
+    const input = row?.querySelector(`[data-field="${preview.dataset.moneyPreviewField}"]`);
+    updateMoneyPreview(preview, input?.value);
+  });
+}
+
 function formatMonthCount(months) {
   if (!Number.isFinite(months)) {
     return "계산 불가";
@@ -285,11 +347,17 @@ function renderAssets() {
         </label>
         <label>
           현재 금액
-          <input data-field="amount" type="number" min="0" step="10000" value="${asset.amount ?? ""}" />
+          <div class="money-input-row">
+            <input data-field="amount" type="number" min="0" step="10000" value="${asset.amount ?? ""}" />
+            <span class="money-preview" data-money-preview-field="amount" aria-live="polite"></span>
+          </div>
         </label>
         <label>
           월 납입
-          <input data-field="monthlyContribution" type="number" min="0" step="10000" value="${asset.monthlyContribution ?? ""}" />
+          <div class="money-input-row">
+            <input data-field="monthlyContribution" type="number" min="0" step="10000" value="${asset.monthlyContribution ?? ""}" />
+            <span class="money-preview" data-money-preview-field="monthlyContribution" aria-live="polite"></span>
+          </div>
         </label>
         <label>
           연수익률
@@ -300,6 +368,8 @@ function renderAssets() {
 
     assetList.append(row);
   });
+
+  renderMoneyPreviews();
 }
 
 function escapeHtml(value) {
@@ -616,6 +686,7 @@ function render() {
   renderAllocation(projection);
   renderFeedbackItems(state.aiFeedbackItems);
   renderScenarioPreview();
+  renderMoneyPreviews();
 }
 
 function moveToTab(tabName) {
@@ -645,6 +716,7 @@ function applyInputs() {
 
 function markInputChanged() {
   state.aiFeedbackItems = [];
+  renderMoneyPreviews();
   renderFeedbackItems([]);
   output.aiStatus.classList.remove("error");
   output.aiStatus.textContent = "입력값을 바탕으로 실제 AI 피드백을 생성합니다.";

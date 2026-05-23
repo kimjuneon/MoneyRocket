@@ -420,6 +420,33 @@ select:focus {
   box-shadow: 0 0 0 3px rgba(49, 130, 246, 0.14);
 }
 
+.money-input-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  gap: 8px;
+  align-items: center;
+}
+
+.money-preview {
+  display: none;
+  max-width: 180px;
+  min-height: 50px;
+  align-items: center;
+  padding: 0 12px;
+  border: 1px solid #d9eaff;
+  border-radius: 16px;
+  background: #f2f6ff;
+  color: var(--blue);
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1.25;
+  word-break: keep-all;
+}
+
+.money-preview.visible {
+  display: flex;
+}
+
 .two-col {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -640,8 +667,14 @@ select:focus {
   .quick-grid,
   .metric-list,
   .two-col,
+  .money-input-row,
   .allocation-layout {
     grid-template-columns: 1fr;
+  }
+
+  .money-preview {
+    max-width: none;
+    min-height: 38px;
   }
 
   .asset-grid {

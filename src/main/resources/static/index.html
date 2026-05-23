@@ -107,28 +107,43 @@
 
           <label>
             목표 금액
-            <input id="goalAmount" type="number" min="0" step="10000" placeholder="예: 100000000" />
+            <div class="money-input-row">
+              <input id="goalAmount" type="number" min="0" step="10000" placeholder="예: 100000000" />
+              <span class="money-preview" data-money-preview-for="goalAmount" aria-live="polite"></span>
+            </div>
           </label>
 
           <label>
             현재 현금/저축
-            <input id="cashAmount" type="number" min="0" step="10000" placeholder="예: 34000000" />
+            <div class="money-input-row">
+              <input id="cashAmount" type="number" min="0" step="10000" placeholder="예: 34000000" />
+              <span class="money-preview" data-money-preview-for="cashAmount" aria-live="polite"></span>
+            </div>
           </label>
 
           <div class="two-col">
             <label>
               월 실수령액
-              <input id="monthlyIncome" type="number" min="0" step="10000" placeholder="예: 3600000" />
+              <div class="money-input-row">
+                <input id="monthlyIncome" type="number" min="0" step="10000" placeholder="예: 3600000" />
+                <span class="money-preview" data-money-preview-for="monthlyIncome" aria-live="polite"></span>
+              </div>
             </label>
             <label>
               월 고정지출
-              <input id="fixedExpense" type="number" min="0" step="10000" placeholder="예: 1200000" />
+              <div class="money-input-row">
+                <input id="fixedExpense" type="number" min="0" step="10000" placeholder="예: 1200000" />
+                <span class="money-preview" data-money-preview-for="fixedExpense" aria-live="polite"></span>
+              </div>
             </label>
           </div>
 
           <label>
             월 변동지출
-            <input id="variableExpense" type="number" min="0" step="10000" placeholder="예: 900000" />
+            <div class="money-input-row">
+              <input id="variableExpense" type="number" min="0" step="10000" placeholder="예: 900000" />
+              <span class="money-preview" data-money-preview-for="variableExpense" aria-live="polite"></span>
+            </div>
           </label>
 
           <div class="asset-toolbar">
@@ -227,6 +242,6 @@
       </section>
     </main>
 
-    <script src="app.js?v=20260523-3"></script>
+    <script src="app.js?v=20260524-1"></script>
   </body>
 </html>
