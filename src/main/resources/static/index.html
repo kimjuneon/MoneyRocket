@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>머니로켓</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">목표 자금 시뮬레이터</p>
+          <h1>머니로켓</h1>
+        </div>
+        <div class="save-state" id="saveState">자동 저장됨</div>
+      </header>
+
+      <nav class="tabbar" aria-label="머니로켓 메뉴">
+        <button class="tab-button active" type="button" data-tab="home">홈</button>
+        <button class="tab-button" type="button" data-tab="input">입력</button>
+        <button class="tab-button" type="button" data-tab="analysis">분석</button>
+        <button class="tab-button" type="button" data-tab="feedback">피드백</button>
+      </nav>
+
+      <section class="tab-page active" id="tab-home">
+        <section class="rocket-stage" aria-label="목표 진행 상황">
+          <div class="stage-heading">
+            <div>
+              <p class="eyebrow">현재 위치</p>
+              <h2 id="homeTitle">목표까지 42% 지점</h2>
+            </div>
+            <strong id="heroProgress">42%</strong>
+          </div>
+
+          <div class="orbit">
+            <div class="trail"></div>
+            <div class="trail-fill" id="trailFill"></div>
+            <div class="start-dot">
+              <span>출발</span>
+            </div>
+            <div class="rocket-wrap" id="rocketWrap">
+              <div class="money-bubble" id="moneyBubble">+0.00원</div>
+              <div class="rocket" aria-hidden="true">
+                <div class="rocket-window"></div>
+                <div class="rocket-flame"></div>
+              </div>
+            </div>
+            <div class="planet">
+              <span>목표 행성</span>
+            </div>
+          </div>
+
+          <div class="progress-summary">
+            <div>
+              <span>목표 금액</span>
+              <strong id="goalSummary">1억원</strong>
+            </div>
+            <div>
+              <span>현재 자산</span>
+              <strong id="currentSummary">4,200만원</strong>
+            </div>
+            <div>
+              <span>남은 금액</span>
+              <strong id="remainingSummary">5,800만원</strong>
+            </div>
+            <div>
+              <span>남은 기간</span>
+              <strong id="timeSummary">3년 8개월</strong>
+            </div>
+          </div>
+        </section>
+
+        <section class="quick-grid">
+          <div class="metric-card">
+            <span>초마다 쌓이는 돈</span>
+            <strong id="perSecondHome">+0.00원</strong>
+          </div>
+          <div class="metric-card">
+            <span>목표 도착 예상 나이</span>
+            <strong id="arrivalAgeHome">-</strong>
+          </div>
+          <div class="metric-card">
+              <span>월 예상 순수익</span>
+              <strong id="monthlyTargetHome">0원</strong>
+          </div>
+        </section>
+      </section>
+
+      <section class="tab-page" id="tab-input">
+        <form class="panel" id="moneyForm">
+          <div class="panel-heading">
+            <p class="eyebrow">입력</p>
+            <h2>목표와 현금흐름</h2>
+          </div>
+
+          <div class="two-col">
+            <label>
+            현재 나이
+              <input id="age" type="number" min="1" placeholder="예: 31" />
+            </label>
+            <label>
+              희망 목표 나이
+              <input id="targetAge" type="number" min="1" placeholder="예: 38" />
+            </label>
+          </div>
+
+          <label>
+            목표 금액
+            <input id="goalAmount" type="number" min="0" step="10000" placeholder="예: 100000000" />
+          </label>
+
+          <label>
+            현재 현금/저축
+            <input id="cashAmount" type="number" min="0" step="10000" placeholder="예: 34000000" />
+          </label>
+
+          <div class="two-col">
+            <label>
+              월 실수령액
+              <input id="monthlyIncome" type="number" min="0" step="10000" placeholder="예: 3600000" />
+            </label>
+            <label>
+              월 고정지출
+              <input id="fixedExpense" type="number" min="0" step="10000" placeholder="예: 1200000" />
+            </label>
+          </div>
+
+          <label>
+            월 변동지출
+            <input id="variableExpense" type="number" min="0" step="10000" placeholder="예: 900000" />
+          </label>
+
+          <div class="asset-toolbar">
+            <div>
+              <p class="eyebrow">추가 수익/자산</p>
+              <h2>직접 입력 자산</h2>
+            </div>
+            <button class="secondary-button" type="button" id="addAssetButton">자산 추가</button>
+          </div>
+
+          <div class="asset-list" id="assetList"></div>
+
+            <div class="button-row">
+                <button class="secondary-button" type="button" id="resetButton">기본값으로 초기화</button>
+                <button class="primary-button input-apply-button" type="button" id="applyInputButton">반영하기</button>
+            </div>
+        </form>
+      </section>
+
+      <section class="tab-page" id="tab-analysis">
+        <section class="panel">
+          <div class="panel-heading">
+            <p class="eyebrow">분석</p>
+            <h2>목표 도착 계산</h2>
+          </div>
+
+          <div class="metric-list">
+            <div>
+              <span>월 저축 가능액</span>
+              <strong id="monthlySaving">0원</strong>
+            </div>
+            <div>
+              <span>월 자산 납입액</span>
+              <strong id="assetContribution">0원</strong>
+            </div>
+            <div>
+              <span>저축률</span>
+              <strong id="savingRate">0%</strong>
+            </div>
+            <div>
+              <span>고정지출 비율</span>
+              <strong id="fixedRatio">0%</strong>
+            </div>
+            <div>
+              <span>저축만 할 때</span>
+              <strong id="savingOnlyTime">-</strong>
+            </div>
+            <div>
+              <span>자산 성장 포함</span>
+              <strong id="withGrowthTime">-</strong>
+            </div>
+            <div>
+              <span>가중 평균 연수익률</span>
+              <strong id="weightedReturn">0%</strong>
+            </div>
+            <div>
+              <span>목표 도착 예상 나이</span>
+              <strong id="arrivalAge">-</strong>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading">
+            <p class="eyebrow">자산 비중</p>
+            <h2>현재 자산 구성</h2>
+          </div>
+          <div class="allocation-layout">
+            <div class="allocation-chart" id="allocationChart" aria-label="자산 비중 차트"></div>
+            <div class="allocation-list" id="allocationList"></div>
+          </div>
+        </section>
+      </section>
+
+      <section class="tab-page" id="tab-feedback">
+        <section class="panel">
+          <div class="panel-heading">
+            <p class="eyebrow">AI 목표 피드백</p>
+            <h2>이번 달 점검</h2>
+          </div>
+
+          <button class="primary-button" type="button" id="aiFeedbackButton">AI 피드백 받기</button>
+          <p class="ai-status" id="aiStatus">입력값을 바탕으로 실제 AI 피드백을 생성합니다.</p>
+
+          <div class="feedback-box">
+            <ul id="feedbackList"></ul>
+          </div>
+
+          <div class="scenario-box">
+            <h3>10만원 더 모으면</h3>
+            <p id="scenarioText">계산 중</p>
+          </div>
+
+          <p class="notice">AI 피드백은 입력값 기준 참고용입니다. 실제 수익률과 목표 도달 시점은 달라질 수 있으며, 특정 금융상품이나 투자 종목을 추천하지 않습니다.</p>
+        </section>
+      </section>
+    </main>
+
+    <script src="app.js?v=20260523-3"></script>
+  </body>
+</html>
