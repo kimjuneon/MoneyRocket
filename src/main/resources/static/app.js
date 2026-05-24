@@ -658,6 +658,20 @@ function startFeedbackCooldownTimer() {
   updateAiFeedbackButton();
 }
 
+async function readFeedbackResponse(response) {
+  const responseText = await response.text();
+
+  if (responseText.trim().length === 0) {
+    return {};
+  }
+
+  try {
+    return JSON.parse(responseText);
+  } catch {
+    throw new Error("AI 피드백 응답을 읽지 못했어요. 잠시 후 다시 시도해 주세요.");
+  }
+}
+
 async function requestAiFeedback() {
   readInputsToState();
   readAssetsToState();
@@ -697,7 +711,7 @@ async function requestAiFeedback() {
       body: JSON.stringify(buildAiPayload(projection)),
     });
 
-    const result = await response.json();
+    const result = await readFeedbackResponse(response);
 
     if (!response.ok) {
       throw new Error(result.error || "AI 피드백 생성에 실패했어요.");
