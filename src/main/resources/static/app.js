@@ -727,25 +727,15 @@ function renderLiveProgress(projection, liveTotal) {
   const liveRemaining = Math.max(goalAmount - liveCurrentTotal, 0);
   const liveProgress = goalAmount > 0 ? Math.min((liveCurrentTotal / goalAmount) * 100, 100) : 0;
   const progressRatio = liveProgress / 100;
-  const orbitRect = document.querySelector(".orbit").getBoundingClientRect();
-  const trailStartX = orbitRect.width * 0.08;
-  const trailStartY = orbitRect.height * 0.66;
-  const trailEndX = orbitRect.width * 0.84;
-  const trailEndY = orbitRect.height * 0.31;
-  const trailDeltaX = trailEndX - trailStartX;
-  const trailDeltaY = trailEndY - trailStartY;
-  const rocketX = trailStartX + trailDeltaX * progressRatio;
-  const rocketY = trailStartY + trailDeltaY * progressRatio;
-  const rocketAngle = Math.atan2(trailDeltaY, trailDeltaX) * 180 / Math.PI + 90;
+  const rocketLeft = 8 + progressRatio * 76;
+  const rocketTop = 66 - progressRatio * 35;
   const progressLabel = formatProgress(liveProgress);
 
   output.homeTitle.textContent = `목표까지 ${progressLabel} 지점`;
   output.heroProgress.textContent = progressLabel;
-  output.trailFill.setAttribute("x2", String(8 + 76 * progressRatio));
-  output.trailFill.setAttribute("y2", String(66 - 35 * progressRatio));
-  output.rocketWrap.style.left = `${rocketX}px`;
-  output.rocketWrap.style.top = `${rocketY}px`;
-  output.rocketWrap.style.setProperty("--rocket-angle", `${rocketAngle}deg`);
+  output.trailFill.style.width = `${Math.max(3, Math.min(liveProgress, 100))}%`;
+  output.rocketWrap.style.left = `${rocketLeft}%`;
+  output.rocketWrap.style.top = `${rocketTop}%`;
   output.currentSummary.textContent = formatWon(liveCurrentTotal);
   output.remainingSummary.textContent = formatWon(liveRemaining);
 }
