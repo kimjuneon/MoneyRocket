@@ -12,7 +12,7 @@ openai:
 app:
   cors:
     allowed-origins:
-      - https://moneyrocket.apps.tossmini.com
-      - https://moneyrocket.private-apps.tossmini.com
+      - https://money-rocket.apps.tossmini.com
+      - https://money-rocket.private-apps.tossmini.com
       - http://localhost:5173
       - http://127.0.0.1:5173
