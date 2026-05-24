@@ -8,3 +8,11 @@ spring:
 openai:
   api-key: ${OPENAI_API_KEY:}
   model: ${OPENAI_MODEL:gpt-5.2}
+
+app:
+  cors:
+    allowed-origins:
+      - https://moneyrocket.apps.tossmini.com
+      - https://moneyrocket.private-apps.tossmini.com
+      - http://localhost:5173
+      - http://127.0.0.1:5173
