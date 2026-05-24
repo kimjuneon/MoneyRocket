@@ -10,12 +10,17 @@ const defaultState = {
   variableExpense: "",
   assets: [],
   aiFeedbackItems: [],
+  lastAiFeedbackAt: 0,
+  lastAiFeedbackSignature: "",
 };
 
 let state = loadState();
 let currentPerSecond = 0;
 let animatedTotal = 0;
 let lastTick = performance.now();
+let feedbackCooldownTimer = null;
+
+const AI_FEEDBACK_COOLDOWN_MS = 10 * 60 * 1000;
 
 const assetColors = ["#3182F6", "#FF8A34", "#00B894", "#7C5CFF", "#F2C94C", "#2D9CDB"];
 
@@ -215,6 +220,46 @@ function formatMonthCount(months) {
   }
 
   return `${years}년 ${leftMonths}개월`;
+}
+
+function formatProgress(value) {
+  const numericValue = numberValue(value);
+
+  if (numericValue <= 0) {
+    return "0.000000%";
+  }
+
+  if (numericValue >= 100) {
+    return "100.000000%";
+  }
+
+  return `${numericValue.toFixed(6)}%`;
+}
+
+function getFeedbackSignature(projection = calculateProjection()) {
+  return JSON.stringify(buildAiPayload(projection));
+}
+
+function getFeedbackWaitMs(projection = calculateProjection()) {
+  const signature = getFeedbackSignature(projection);
+
+  if (signature !== state.lastAiFeedbackSignature) {
+    return 0;
+  }
+
+  return Math.max(AI_FEEDBACK_COOLDOWN_MS - (Date.now() - numberValue(state.lastAiFeedbackAt)), 0);
+}
+
+function formatWaitTime(milliseconds) {
+  const totalSeconds = Math.ceil(milliseconds / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  if (minutes <= 0) {
+    return `${seconds}초`;
+  }
+
+  return `${minutes}분 ${String(seconds).padStart(2, "0")}초`;
 }
 
 function calculateProjection(extraMonthly = 0) {
@@ -589,14 +634,45 @@ function renderFeedbackItems(items) {
     .join("");
 }
 
+function updateAiFeedbackButton() {
+  if (!aiFeedbackButton) {
+    return;
+  }
+
+  const waitMs = getFeedbackWaitMs();
+  const hasSameFeedback = waitMs > 0;
+
+  aiFeedbackButton.disabled = hasSameFeedback;
+  aiFeedbackButton.textContent = hasSameFeedback
+    ? `${formatWaitTime(waitMs)} 후 다시 요청 가능`
+    : "AI 피드백 받기";
+
+  if (hasSameFeedback && output.aiStatus.textContent === "AI 피드백 생성 완료") {
+    output.aiStatus.textContent = "같은 입력값은 잠시 후 다시 요청할 수 있어요. 금액을 바꾸면 바로 새 피드백을 받을 수 있어요.";
+  }
+}
+
+function startFeedbackCooldownTimer() {
+  window.clearInterval(feedbackCooldownTimer);
+  feedbackCooldownTimer = window.setInterval(updateAiFeedbackButton, 1000);
+  updateAiFeedbackButton();
+}
+
 async function requestAiFeedback() {
   readInputsToState();
   readAssetsToState();
 
   const projection = calculateProjection();
   const validationErrors = validateAiFeedbackRequest(projection);
+  const waitMs = getFeedbackWaitMs(projection);
 
   output.aiStatus.classList.remove("error");
+
+  if (waitMs > 0) {
+    output.aiStatus.textContent = `같은 입력값은 ${formatWaitTime(waitMs)} 후 다시 요청할 수 있어요. 금액을 바꾸면 바로 새 피드백을 받을 수 있어요.`;
+    updateAiFeedbackButton();
+    return;
+  }
 
   if (validationErrors.length > 0) {
     output.aiStatus.classList.add("error");
@@ -630,6 +706,8 @@ async function requestAiFeedback() {
     const items = [result.summary, ...(result.feedback || []), result.riskNote].filter(Boolean);
 
     state.aiFeedbackItems = items;
+    state.lastAiFeedbackAt = Date.now();
+    state.lastAiFeedbackSignature = getFeedbackSignature(projection);
 
     saveState();
     renderFeedbackItems(state.aiFeedbackItems);
@@ -639,8 +717,23 @@ async function requestAiFeedback() {
     output.aiStatus.classList.add("error");
     output.aiStatus.textContent = error.message;
   } finally {
-    aiFeedbackButton.disabled = false;
+    updateAiFeedbackButton();
   }
+}
+
+function renderLiveProgress(projection, liveTotal) {
+  const goalAmount = numberValue(state.goalAmount);
+  const liveCurrentTotal = Math.max(liveTotal, 0);
+  const liveRemaining = Math.max(goalAmount - liveCurrentTotal, 0);
+  const liveProgress = goalAmount > 0 ? Math.min((liveCurrentTotal / goalAmount) * 100, 100) : 0;
+  const progressLabel = formatProgress(liveProgress);
+
+  output.homeTitle.textContent = `목표까지 ${progressLabel} 지점`;
+  output.heroProgress.textContent = progressLabel;
+  output.trailFill.style.width = `${Math.max(3, Math.min(liveProgress, 100))}%`;
+  output.rocketWrap.style.left = `${Math.max(14, Math.min(82, liveProgress))}%`;
+  output.currentSummary.textContent = formatWon(liveCurrentTotal);
+  output.remainingSummary.textContent = formatWon(liveRemaining);
 }
 
 function render() {
@@ -650,7 +743,6 @@ function render() {
   const monthlyIncome = numberValue(state.monthlyIncome);
   const fixedExpense = numberValue(state.fixedExpense);
 
-  const progressLabel = `${Math.round(projection.progress)}%`;
   const savingRate = monthlyIncome > 0 ? (projection.monthlySurplus / monthlyIncome) * 100 : 0;
   const fixedRatio = monthlyIncome > 0 ? (fixedExpense / monthlyIncome) * 100 : 0;
 
@@ -660,14 +752,9 @@ function render() {
 
   currentPerSecond = projection.perSecond;
 
-  output.homeTitle.textContent = `목표까지 ${progressLabel} 지점`;
-  output.heroProgress.textContent = progressLabel;
-  output.trailFill.style.width = `${Math.max(5, Math.min(projection.progress, 100))}%`;
-  output.rocketWrap.style.left = `${Math.max(14, Math.min(82, projection.progress))}%`;
+  renderLiveProgress(projection, projection.currentTotal + animatedTotal);
 
   output.goalSummary.textContent = formatWon(state.goalAmount);
-  output.currentSummary.textContent = formatWon(projection.currentTotal);
-  output.remainingSummary.textContent = formatWon(projection.remaining);
   output.timeSummary.textContent = formatMonthCount(projection.growthMonths);
 
   output.perSecondHome.textContent = `+${projection.perSecond.toFixed(2)}원`;
@@ -687,6 +774,7 @@ function render() {
   renderFeedbackItems(state.aiFeedbackItems);
   renderScenarioPreview();
   renderMoneyPreviews();
+  startFeedbackCooldownTimer();
 }
 
 function moveToTab(tabName) {
@@ -716,11 +804,13 @@ function applyInputs() {
 
 function markInputChanged() {
   state.aiFeedbackItems = [];
+  state.lastAiFeedbackSignature = "";
   renderMoneyPreviews();
   renderFeedbackItems([]);
   output.aiStatus.classList.remove("error");
-  output.aiStatus.textContent = "입력값을 바탕으로 실제 AI 피드백을 생성합니다.";
+  output.aiStatus.textContent = "입력값이 바뀌었어요. 반영 후 새 AI 피드백을 받을 수 있어요.";
   output.saveState.textContent = "입력값 미반영";
+  updateAiFeedbackButton();
 }
 
 function addAsset() {
@@ -790,6 +880,9 @@ function animateMoney(now) {
 
   animatedTotal += currentPerSecond * deltaSeconds;
   output.moneyBubble.textContent = `+${animatedTotal.toFixed(2)}원`;
+
+  const projection = calculateProjection();
+  renderLiveProgress(projection, projection.currentTotal + animatedTotal);
 
   requestAnimationFrame(animateMoney);
 }
