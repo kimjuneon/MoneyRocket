@@ -213,12 +213,12 @@ h3 {
 .trail,
 .trail-fill {
   position: absolute;
-  left: 6%;
-  top: 60%;
+  left: 8%;
+  top: 66%;
   z-index: 1;
   height: 22px;
   border-radius: 999px;
-  transform: rotate(-18deg);
+  transform: rotate(-25deg);
   transform-origin: left center;
 }
 
@@ -285,36 +285,37 @@ h3 {
 }
 
 .rocket-wrap {
-  left: 42%;
-  top: 43%;
-  width: 126px;
-  height: 174px;
-  transform: translate(-50%, -50%) rotate(64deg);
-  transition: left 250ms ease;
+  left: 8%;
+  top: 66%;
+  z-index: 4;
+  width: 96px;
+  height: 132px;
+  transform: translate(-50%, -50%) rotate(65deg);
+  transition: left 250ms ease, top 250ms ease;
 }
 
 .money-bubble {
   position: absolute;
-  left: 42px;
-  top: -46px;
-  min-width: 130px;
-  padding: 8px 14px;
+  left: 26px;
+  top: -42px;
+  min-width: 112px;
+  padding: 7px 12px;
   border: 2px solid var(--blue-weak);
   border-radius: 999px;
   background: var(--card);
   color: var(--blue);
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 900;
   text-align: center;
-  transform: rotate(-64deg);
+  transform: rotate(-65deg);
   box-shadow: 0 8px 18px rgba(49, 130, 246, 0.08);
 }
 
 .rocket {
   position: relative;
-  width: 108px;
-  height: 148px;
-  margin: 12px auto 0;
+  width: 82px;
+  height: 114px;
+  margin: 9px auto 0;
   background: linear-gradient(90deg, #3182f6 0 32%, #64a6ff 33% 63%, #3182f6 64%);
   clip-path: polygon(50% 0, 88% 30%, 100% 76%, 70% 72%, 50% 100%, 30% 72%, 0 76%, 12% 30%);
 }
@@ -322,9 +323,9 @@ h3 {
 .rocket-window {
   position: absolute;
   left: 50%;
-  top: 44px;
-  width: 36px;
-  height: 36px;
+  top: 34px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: #eaf3ff;
   transform: translateX(-50%);
@@ -333,9 +334,9 @@ h3 {
 .rocket-flame {
   position: absolute;
   left: 50%;
-  bottom: -30px;
-  width: 46px;
-  height: 58px;
+  bottom: -22px;
+  width: 36px;
+  height: 44px;
   border-radius: 50% 50% 60% 60%;
   background: linear-gradient(#ffd166, #ff8a34);
   transform: translateX(-50%);

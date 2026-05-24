@@ -726,12 +726,16 @@ function renderLiveProgress(projection, liveTotal) {
   const liveCurrentTotal = Math.max(liveTotal, 0);
   const liveRemaining = Math.max(goalAmount - liveCurrentTotal, 0);
   const liveProgress = goalAmount > 0 ? Math.min((liveCurrentTotal / goalAmount) * 100, 100) : 0;
+  const progressRatio = liveProgress / 100;
+  const rocketLeft = 8 + progressRatio * 76;
+  const rocketTop = 66 - progressRatio * 35;
   const progressLabel = formatProgress(liveProgress);
 
   output.homeTitle.textContent = `목표까지 ${progressLabel} 지점`;
   output.heroProgress.textContent = progressLabel;
   output.trailFill.style.width = `${Math.max(3, Math.min(liveProgress, 100))}%`;
-  output.rocketWrap.style.left = `${Math.max(14, Math.min(82, liveProgress))}%`;
+  output.rocketWrap.style.left = `${rocketLeft}%`;
+  output.rocketWrap.style.top = `${rocketTop}%`;
   output.currentSummary.textContent = formatWon(liveCurrentTotal);
   output.remainingSummary.textContent = formatWon(liveRemaining);
 }
