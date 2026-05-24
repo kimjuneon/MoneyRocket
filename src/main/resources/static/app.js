@@ -706,6 +706,7 @@ async function requestAiFeedback() {
     const response = await fetch("/api/feedback", {
       method: "POST",
       headers: {
+        "Accept": "application/json",
         "Content-Type": "application/json",
       },
       body: JSON.stringify(buildAiPayload(projection)),
@@ -729,7 +730,8 @@ async function requestAiFeedback() {
     output.aiStatus.textContent = "AI 피드백 생성 완료";
   } catch (error) {
     output.aiStatus.classList.add("error");
-    output.aiStatus.textContent = error.message;
+    renderLocalGuidance(projection);
+    output.aiStatus.textContent = `${error.message} 기본 계산 피드백을 먼저 보여드렸어요. 잠시 후 다시 요청해 주세요.`;
   } finally {
     updateAiFeedbackButton();
   }
