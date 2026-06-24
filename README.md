@@ -1,93 +1,132 @@
-# 머니로켓
+# MoneyRocket
 
-목표 금액까지 얼마나 남았는지 계산하고, 입력값을 바탕으로 AI 재무 피드백을 받는 Spring Boot 기반 MVP입니다.
+> 목표 금액까지의 도달 가능성을 계산하고, 입력값을 기반으로 AI 재무 피드백을 제공하는 Spring Boot 기반 MVP입니다.
 
-## 구성
+## 1. 프로젝트 소개
 
-- Spring Boot 3.5
+MoneyRocket은 사용자가 나이, 목표 금액, 현재 자산, 월 수입/지출, 자산별 납입액과 기대 수익률을 입력하면 목표 달성까지의 흐름을 계산하고 AI 피드백을 받을 수 있는 웹 서비스입니다.
+
+프론트엔드는 Spring Boot 정적 리소스로 제공하고, 백엔드는 OpenAI Responses API를 호출해 한국어 재무 코칭 응답을 JSON 형태로 반환합니다. GCP Cloud Run 배포와 GitHub Actions 자동 배포까지 함께 구성했습니다.
+
+## 2. 주요 기능
+
+- 목표 금액, 현재 자산, 월 수입/지출 기반 계산 화면 제공
+- 자산별 금액, 월 납입액, 기대 수익률 입력
+- 목표까지 남은 금액, 월 현금흐름, 예상 도달 기간 계산
+- OpenAI API 기반 한국어 재무 피드백 생성
+- 헬스 체크 API 제공
+- Docker 이미지 빌드 및 Cloud Run 자동 배포
+
+## 3. 기술 스택
+
+| 분류 | 기술 |
+| --- | --- |
+| Language | Java 21, JavaScript |
+| Backend | Spring Boot 3.5, Spring Web |
+| AI | OpenAI Responses API |
+| Build | Gradle |
+| Infra | Docker, GCP Cloud Run, Artifact Registry, Secret Manager |
+| CI/CD | GitHub Actions, Workload Identity Federation |
+| Test | JUnit 5, Spring Boot Test |
+
+## 4. 프로젝트 구조
+
+```text
+.
+├── src/main/java/com/moneyrocket/app
+│   ├── config              # CORS, 보안 헤더 설정
+│   ├── presentation        # API controller, request/response DTO
+│   └── service             # OpenAI 피드백 생성 로직
+├── src/main/resources
+│   ├── application.yaml    # 서버/AI/CORS 설정
+│   └── static              # 정적 프론트엔드
+├── scripts                 # GCP 초기 설정 스크립트
+├── .github/workflows       # Cloud Run 배포 워크플로우
+├── Dockerfile
+└── build.gradle
+```
+
+## 5. 실행 방법
+
+### 사전 준비
+
 - Java 21
-- Gradle
-- 정적 프론트엔드: `src/main/resources/static`
-- AI 피드백 API: `POST /api/feedback`
-- 헬스 체크: `GET /api/health`
-- 배포 대상: GCP Cloud Run
-- CI/CD: GitHub Actions → Artifact Registry → Cloud Run
+- OpenAI API key
 
-## 로컬 실행
+### 로컬 실행
 
 ```bash
 OPENAI_API_KEY=sk-... ./gradlew bootRun
 ```
 
-브라우저에서 아래 주소로 접속합니다.
+브라우저에서 다음 주소로 접속합니다.
 
 ```text
-http://127.0.0.1:8080
+http://localhost:8080
 ```
 
-API 키 없이 실행해도 앱 화면은 뜹니다. 다만 `AI 피드백 받기`는 `OPENAI_API_KEY`가 있어야 동작합니다.
+API 키 없이도 화면은 열리지만, AI 피드백 기능은 `OPENAI_API_KEY`가 있어야 동작합니다.
 
-## Docker 실행
+### Docker 실행
 
 ```bash
 docker build -t moneyrocket .
 docker run --rm -p 8080:8080 -e OPENAI_API_KEY=sk-... moneyrocket
 ```
 
-## 테스트
+## 6. API 명세
+
+| Method | URI | 설명 |
+| --- | --- | --- |
+| GET | `/api/health` | 서버 상태 확인 |
+| POST | `/api/feedback` | 자산/목표 데이터를 기반으로 AI 피드백 생성 |
+
+`POST /api/feedback` 요청은 나이, 목표 나이, 목표 금액, 현재 자산, 월 수입/지출, 자산 목록 등을 포함합니다. 응답은 `summary`, `feedback`, `riskNote` 필드를 가진 JSON입니다.
+
+## 7. 테스트 및 배포
+
+### 테스트
 
 ```bash
 ./gradlew test
 ```
 
-로컬 Java 25와 Gradle 호환 문제가 있으면 IntelliJ Gradle JVM을 Java 21로 바꾸거나 Docker 빌드를 사용합니다.
-
-## GCP 최초 설정
-
-새 GCP 계정으로 로그인한 뒤 새 프로젝트를 만들고, 아래 값을 정해서 초기 설정을 실행합니다.
+### GCP 초기 설정
 
 ```bash
-gcloud auth login
-gcloud projects create moneyrocket-juneon --name="MoneyRocket"
-gcloud config set project moneyrocket-juneon
-```
-
-결제 계정 연결은 GCP 콘솔에서 프로젝트에 연결해야 합니다. 연결 후 아래 스크립트를 실행합니다.
-
-```bash
-PROJECT_ID=moneyrocket-juneon \
+PROJECT_ID=your-gcp-project-id \
 OPENAI_API_KEY_VALUE=sk-... \
 ./scripts/gcp-bootstrap.sh
 ```
 
-스크립트가 하는 일:
+스크립트는 Artifact Registry, Cloud Run 배포용 서비스 계정, Workload Identity Federation, Secret Manager의 `OPENAI_API_KEY`를 설정합니다.
 
-- 필요한 GCP API 활성화
-- Artifact Registry 저장소 생성
-- GitHub Actions 배포용 서비스 계정 생성
-- Cloud Run 배포 권한 부여
-- Secret Manager에 `OPENAI_API_KEY` 생성 및 값 등록
-- GitHub Secret에 넣을 서비스 계정 키 파일 생성
+### 자동 배포
 
-## GitHub Secrets
+`.github/workflows/deploy-cloud-run.yml`은 `main` 브랜치 push 시 다음 순서로 동작합니다.
 
-GitHub 저장소 `Settings > Secrets and variables > Actions`에 아래 값을 등록합니다.
+1. 테스트 실행
+2. Docker 이미지 빌드
+3. Artifact Registry push
+4. Cloud Run 배포
+
+필요한 GitHub Secrets는 다음과 같습니다.
 
 ```text
-GCP_PROJECT_ID=money-rocket-497214
-GCP_WIF_PROVIDER=projects/53188815359/locations/global/workloadIdentityPools/github-actions/providers/github
-GCP_SERVICE_ACCOUNT=github-moneyrocket-deployer@money-rocket-497214.iam.gserviceaccount.com
+GCP_PROJECT_ID
+GCP_WIF_PROVIDER
+GCP_SERVICE_ACCOUNT
 ```
 
-## 자동 배포
+## 8. 학습 포인트
 
-`main` 브랜치에 push되면 `.github/workflows/deploy-cloud-run.yml`이 실행됩니다.
+- 외부 AI API 응답을 서비스 DTO로 안정적으로 변환하는 흐름을 구현했습니다.
+- 사용자가 입력한 재무 데이터만 기준으로 피드백을 생성하도록 프롬프트 제약을 설계했습니다.
+- Cloud Run 배포를 위해 Docker, Secret Manager, GitHub Actions를 함께 구성했습니다.
 
-파이프라인 순서:
+## 9. 개선할 점
 
-1. Gradle 테스트
-2. Docker 이미지 빌드
-3. Artifact Registry에 이미지 push
-4. Cloud Run `moneyrocket` 서비스 배포
-
-배포 지역은 기본값 `asia-northeast3`입니다.
+- AI 응답 실패 시 사용자 친화적인 fallback 메시지 제공
+- 입력값 검증과 에러 응답 표준화
+- 계산 로직에 대한 단위 테스트 보강
+- API 문서화와 화면 캡처 추가
